@@ -8,7 +8,7 @@ import { ADD_POST, ADD_SUBREDDIT } from '@/graphql/mutation';
 import client from '../../apollo-client';
 import { GET_ALL_POSTS, GET_SUBREDDIT_BY_TOPIC } from '@/graphql/queries';
 import toast from 'react-hot-toast';
-import { log } from 'console';
+
 
 type FormData = {
     postTitle: string
@@ -22,6 +22,8 @@ type Props = {
 }
 
 const PostBox = React.memo(({ subreddit }: Props) => {
+    PostBox.displayName = 'PostBox'; 
+    
     const { data: session } = useSession();
     const [addPost] = useMutation(ADD_POST, {
         refetchQueries: [
@@ -114,15 +116,6 @@ const PostBox = React.memo(({ subreddit }: Props) => {
         }
     })
 
-    // const ImageUploader = ({ onImageSelect }: any) => {
-    //     const handleImageChange = (event: any) => {
-    //         const selectedImage = event.target.files[0];
-    //         onImageSelect(selectedImage);
-    //     };
-
-    //     const handleImageSelect = (image) => {
-    //         setSelectedImage(image);
-    //     };
 
 
 
