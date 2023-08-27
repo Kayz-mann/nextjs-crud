@@ -1,6 +1,6 @@
 type Comment = {
-    created_at: string
     id: number
+    created_at: string
     post_id: number
     text: string
     username: string

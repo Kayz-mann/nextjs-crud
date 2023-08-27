@@ -7,19 +7,21 @@ import React from 'react'
 import reddit from '../../public/redditLogo.png'
 import { BellIcon, ChatBubbleOvalLeftEllipsisIcon, GlobeEuropeAfricaIcon, MegaphoneIcon, SparklesIcon, VideoCameraIcon } from '@heroicons/react/24/outline'
 import { signIn, signOut, useSession } from 'next-auth/react'
+import Link from 'next/link'
 
 
 const Header = () => {
     const { data: session } = useSession();
     return (
-        <div className='flex bg-white px-4 py-2 shadow-sm sticky top-0 z-50'>
+        <div className='flex bg-white px-4 py-2 shadow-sm sticky top-0 z-50 items-center'>
             <div className='relative h-10 w-20 flex-shrink-0 cursor-pointer'>
-                <Image
-                    alt='reddit-logo'
-                    objectFit='contain'
-                    src='https://www.redditinc.com/assets/images/site/logo.svg'
-                    layout='fill'
-                />
+                <Link href='/'>
+                    <Image
+                        alt='reddit-logo'
+                        objectFit='contain'
+                        src='https://www.redditinc.com/assets/images/site/logo.svg'
+                        layout='fill'
+                    /></Link>
             </div>
 
             <div className='flex items-center mx-7 xl:min-w-[300px]'>

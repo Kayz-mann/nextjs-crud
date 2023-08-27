@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { useMutation } from '@apollo/client';
 import { ADD_POST, ADD_SUBREDDIT } from '@/graphql/mutation';
 import client from '../../apollo-client';
-import { GET_SUBREDDIT_BY_TOPIC } from '@/graphql/queries';
+import { GET_ALL_POSTS, GET_SUBREDDIT_BY_TOPIC } from '@/graphql/queries';
 import toast from 'react-hot-toast';
 import { log } from 'console';
 
@@ -17,9 +17,18 @@ type FormData = {
     subreddit: string
 }
 
-const PostBox = React.memo(() => {
+type Props = {
+    subreddit?: string
+}
+
+const PostBox = React.memo(({ subreddit }: Props) => {
     const { data: session } = useSession();
-    const [addPost] = useMutation(ADD_POST)
+    const [addPost] = useMutation(ADD_POST, {
+        refetchQueries: [
+            GET_ALL_POSTS,
+            'postList'
+        ]
+    })
     const [addSubreddit] = useMutation(ADD_SUBREDDIT)
     const [imageBoxOpen, setImageBoxOpen] = useState(false)
 
@@ -40,7 +49,7 @@ const PostBox = React.memo(() => {
             const { data: { subredditListByTopic } } = await client.query({
                 query: GET_SUBREDDIT_BY_TOPIC,
                 variables: {
-                    topic: formData.subreddit
+                    topic: subreddit || formData.subreddit
                 }
             })
 
@@ -51,7 +60,7 @@ const PostBox = React.memo(() => {
                 console.log('new subreddit creating...')
                 const { data: { insertSubreddit: newSubreddit } } = await addSubreddit({
                     variables: {
-                        topic: formData.subreddit
+                        topic: subreddit || formData.subreddit
                     }
                 })
 
@@ -105,91 +114,107 @@ const PostBox = React.memo(() => {
         }
     })
 
+    // const ImageUploader = ({ onImageSelect }: any) => {
+    //     const handleImageChange = (event: any) => {
+    //         const selectedImage = event.target.files[0];
+    //         onImageSelect(selectedImage);
+    //     };
+
+    //     const handleImageSelect = (image) => {
+    //         setSelectedImage(image);
+    //     };
 
 
-    return (
-        <form onSubmit={onSubmit} className='sticky top-16 z-50 bg-white border-rounded-md border-gray-300 p-2'>
-            <div className='flex items-center space-x-3'>
-                {/* Avatar */}
-                <Avatar />
-                <input
-                    {...register('postTitle', { required: true })}
-                    disabled={!session}
-                    className='flex-1 rounded-md bg-gray-50 p-2 pl-5 outline-none'
-                    type='text'
-                    placeholder={
-                        session ?
-                            'Create a post by entering a title!'
-                            :
-                            'Sign in to post'
-                    }
-                />
 
-                <PhotoIcon
-                    onClick={() => setImageBoxOpen(!imageBoxOpen)}
-                    className={`h-6 cursor-pointer text-gray-300
+
+        return (
+            <form onSubmit={onSubmit} className='sticky top-20 z-50 bg-white border-rounded-md border-gray-300 p-2'>
+                <div className='flex items-center space-x-3'>
+                    {/* Avatar */}
+                    <Avatar />
+                    <input
+                        {...register('postTitle', { required: true })}
+                        disabled={!session}
+                        className='flex-1 rounded-md bg-gray-50 p-2 pl-5 outline-none'
+                        type='text'
+                        placeholder={
+                            session ?
+                                subreddit ?
+                                    `Create a post in r/${subreddit}` :
+                                    'Create a post by entering a title!'
+                                :
+                                'Sign in to post'
+                        }
+                    />
+
+                    <PhotoIcon
+                        onClick={() => setImageBoxOpen(!imageBoxOpen)}
+                        className={`h-6 cursor-pointer text-gray-300
                     ${imageBoxOpen && 'text-blue-300'}`}
-                />
-                <LinkIcon className='h-6 text-gray-300' />
-            </div>
+                    />
+                    <LinkIcon className='h-6 text-gray-300' />
+                </div>
 
-            {!!watch('postTitle') && (
-                <div>
-                    {/* Body */}
-                    <div className='flex items-center px-2'>
-                        <p className='min-w-[90px]'>Body:</p>
-                        <input
-                            className='m-2 flex-1 bg-blue-50 p-2 outline-none'
-                            {...register('postBody')}
-                            type='text'
-                            placeholder='Text (optional)'
-                        />
-                    </div>
-                    <div className='flex items-center px-2'>
-                        <p className='min-w-[90px]'>SubReddit:</p>
-                        <input
-                            className='m-2 flex-1 bg-blue-50 p-2 outline-none'
-                            {...register('subreddit', { required: true })}
-                            type='text'
-                            placeholder='i.e nextjs'
-                        />
-                    </div>
-
-                    {imageBoxOpen && (
+                {!!watch('postTitle') && (
+                    <div>
+                        {/* Body */}
                         <div className='flex items-center px-2'>
-                            <p className='min-w-[90px]'>Image URL:</p>
+                            <p className='min-w-[90px]'>Body:</p>
                             <input
                                 className='m-2 flex-1 bg-blue-50 p-2 outline-none'
-                                {...register('postImage')}
+                                {...register('postBody')}
                                 type='text'
-                                placeholder='Optional...'
+                                placeholder='Text (optional)'
                             />
                         </div>
-                    )}
 
-                    {/* Errors */}
-                    {Object.keys(errors).length > 0 && (
-                        <div>
-                            {errors.postTitle?.type === 'required' && (
-                                <p className='space-y-2 p-2 text-red-500'>A Post Title is required</p>
-                            )}
+                        {!subreddit && (
+                            <div className='flex items-center px-2'>
+                                <p className='min-w-[90px]'>SubReddit:</p>
+                                <input
+                                    className='m-2 flex-1 bg-blue-50 p-2 outline-none'
+                                    {...register('subreddit', { required: true })}
+                                    type='text'
+                                    placeholder='i.e nextjs'
+                                />
+                            </div>
+                        )}
 
-                            {errors.subreddit?.type === 'required' && (
-                                <p className='space-y-2 p-2 text-red-500'>A Subreddit is required</p>
-                            )}
+                        {imageBoxOpen && (
+                            <div className='flex items-center px-2'>
+                                <p className='min-w-[90px]'>Image URL:</p>
+                                <input
+                                    className='m-2 flex-1 bg-blue-50 p-2 outline-none'
+                                    {...register('postImage')}
+                                    type='text'
+                                    placeholder='Optional...'
+                                />
+                            </div>
+                        )}
 
-                        </div>
-                    )}
+                        {/* Errors */}
+                        {Object.keys(errors).length > 0 && (
+                            <div>
+                                {errors.postTitle?.type === 'required' && (
+                                    <p className='space-y-2 p-2 text-red-500'>A Post Title is required</p>
+                                )}
 
-                    {!!watch('postTitle') && (
-                        <button type='submit' className='w-full rounded-full bg-blue-400 text-white'>
-                            Create Post
-                        </button>
-                    )}
-                </div>
-            )}
-        </form>
-    )
-})
+                                {errors.subreddit?.type === 'required' && (
+                                    <p className='space-y-2 p-2 text-red-500'>A Subreddit is required</p>
+                                )}
+
+                            </div>
+                        )}
+
+                        {!!watch('postTitle') && (
+                            <button type='submit' className='w-full rounded-full bg-blue-400 text-white'>
+                                Create Post
+                            </button>
+                        )}
+                    </div>
+                )}
+            </form>
+        )
+    })
 
 export default PostBox
